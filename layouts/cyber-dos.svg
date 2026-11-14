@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" shape-rendering="crispEdges">
+  <rect width="320" height="200" fill="#07040e"/>
+  <!-- top bar: brand, breadcrumb, tab chip, readouts -->
+  <rect width="320" height="18" fill="#0f0a1c"/>
+  <rect y="18" width="320" height="1" fill="#3a2360"/>
+  <rect x="8" y="6" width="26" height="6" fill="#00f0ff"/>
+  <rect x="40" y="7" width="34" height="3" fill="#3a2360"/>
+  <rect x="80" y="3" width="40" height="12" rx="1" fill="#00f0ff" fill-opacity="0.14" stroke="#00f0ff" stroke-opacity="0.55"/>
+  <rect x="85" y="7" width="22" height="3" fill="#00f0ff"/>
+  <rect x="240" y="6" width="16" height="2" fill="#7a639e"/>
+  <rect x="262" y="6" width="20" height="2" fill="#7a639e"/>
+  <rect x="292" y="4" width="20" height="3" fill="#00f0a8"/>
+  <rect x="292" y="10" width="20" height="3" fill="#00f0ff"/>
+  <!-- sidebar frame -->
+  <rect x="0" y="19" width="84" height="181" fill="#0f0a1c"/>
+  <rect x="84" y="19" width="1" height="181" fill="#3a2360"/>
+  <!-- SPACES panel -->
+  <rect x="3" y="22" width="78" height="82" fill="#120c22" stroke="#3a2360"/>
+  <rect x="7" y="26" width="3" height="3" fill="#00f0ff"/>
+  <rect x="13" y="26" width="22" height="3" fill="#a892c9"/>
+  <rect x="70" y="25" width="6" height="6" fill="#7a639e"/>
+  <rect x="3" y="33" width="78" height="1" fill="#3a2360"/>
+  <rect x="8" y="37" width="3" height="3" fill="#00f0a8"/>
+  <rect x="14" y="37" width="30" height="2" fill="#7a639e"/>
+  <rect x="66" y="37" width="8" height="3" fill="#00f0a8"/>
+  <!-- selected space: pink edge, tinted fill -->
+  <rect x="6" y="44" width="72" height="9" fill="#e24d8e" fill-opacity="0.16"/>
+  <rect x="6" y="44" width="2" height="9" fill="#e24d8e"/>
+  <rect x="11" y="47" width="3" height="3" fill="#00f0a8"/>
+  <rect x="17" y="47" width="24" height="3" fill="#e24d8e"/>
+  <rect x="11" y="58" width="3" height="3" fill="#00f0a8"/>
+  <rect x="17" y="58" width="18" height="3" fill="#a892c9"/>
+  <rect x="11" y="69" width="3" height="3" fill="#7a639e"/>
+  <rect x="17" y="69" width="32" height="3" fill="#7a639e"/>
+  <rect x="11" y="80" width="3" height="3" fill="#00f0a8"/>
+  <rect x="17" y="80" width="24" height="3" fill="#a892c9"/>
+  <rect x="3" y="89" width="78" height="1" fill="#3a2360"/>
+  <rect x="7" y="93" width="34" height="2" fill="#7a639e"/>
+  <rect x="68" y="93" width="10" height="2" fill="#00f0ff"/>
+  <!-- AGENTS panel -->
+  <rect x="3" y="108" width="78" height="62" fill="#120c22" stroke="#3a2360"/>
+  <rect x="7" y="112" width="3" height="3" fill="#c77dff"/>
+  <rect x="13" y="112" width="30" height="3" fill="#a892c9"/>
+  <rect x="3" y="119" width="78" height="1" fill="#3a2360"/>
+  <rect x="7" y="123" width="18" height="2" fill="#00f0a8"/>
+  <rect x="6" y="128" width="72" height="11" fill="#e24d8e" fill-opacity="0.16"/>
+  <rect x="6" y="128" width="2" height="11" fill="#e24d8e"/>
+  <rect x="11" y="131" width="10" height="2" fill="#e8dcff"/>
+  <rect x="11" y="135" width="22" height="2" fill="#00f0a8"/>
+  <rect x="7" y="144" width="12" height="2" fill="#7a639e"/>
+  <rect x="11" y="150" width="26" height="2" fill="#a892c9"/>
+  <rect x="11" y="155" width="20" height="2" fill="#7a639e"/>
+  <rect x="17" y="160" width="30" height="2" fill="#7a639e"/>
+  <!-- SETTINGS footer -->
+  <rect x="3" y="174" width="78" height="23" fill="#120c22" stroke="#3a2360"/>
+  <rect x="7" y="178" width="18" height="2" fill="#a892c9"/>
+  <rect x="64" y="178" width="12" height="2" fill="#00f0ff"/>
+  <rect x="3" y="183" width="78" height="1" fill="#3a2360"/>
+  <rect x="7" y="187" width="24" height="2" fill="#a892c9"/>
+  <rect x="60" y="192" width="16" height="2" fill="#7a639e"/>
+  <!-- main pane -->
+  <rect x="86" y="20" width="234" height="180" fill="#0b0713" stroke="#00f0ff" stroke-opacity="0.65"/>
+  <!-- pane header, two rows -->
+  <rect x="87" y="21" width="232" height="18" fill="#0f0a1c"/>
+  <rect x="92" y="25" width="14" height="2" fill="#7a639e"/>
+  <rect x="109" y="25" width="26" height="2" fill="#00f0ff"/>
+  <rect x="92" y="31" width="44" height="2" fill="#e8dcff"/>
+  <rect x="141" y="31" width="14" height="2" fill="#c77dff"/>
+  <rect x="87" y="39" width="232" height="1" fill="#3a2360"/>
+  <!-- heading and body text as bars -->
+  <rect x="93" y="46" width="52" height="4" fill="#e8dcff"/>
+  <rect x="93" y="55" width="120" height="2" fill="#a892c9"/>
+  <rect x="93" y="60" width="88" height="2" fill="#a892c9"/>
+  <!-- terminal output card -->
+  <rect x="92" y="68" width="222" height="58" fill="#0f0a1c" stroke="#3a2360"/>
+  <rect x="97" y="73" width="42" height="2" fill="#00f0ff"/>
+  <rect x="290" y="73" width="18" height="2" fill="#7a639e"/>
+  <rect x="92" y="78" width="222" height="1" fill="#3a2360"/>
+  <rect x="97" y="83" width="40" height="2" fill="#e8dcff"/>
+  <rect x="97" y="89" width="8" height="2" fill="#00f0a8"/>
+  <rect x="108" y="89" width="54" height="2" fill="#00f0a8"/>
+  <rect x="97" y="95" width="8" height="2" fill="#00f0a8"/>
+  <rect x="108" y="95" width="46" height="2" fill="#00f0a8"/>
+  <rect x="97" y="101" width="8" height="2" fill="#00f0a8"/>
+  <rect x="108" y="101" width="50" height="2" fill="#00f0a8"/>
+  <rect x="97" y="110" width="76" height="2" fill="#c77dff"/>
+  <!-- the person's message, tinted -->
+  <rect x="92" y="132" width="222" height="12" fill="#c77dff" fill-opacity="0.13"/>
+  <rect x="97" y="137" width="90" height="2" fill="#c77dff"/>
+  <rect x="93" y="150" width="30" height="2" fill="#7a639e"/>
+  <rect x="93" y="157" width="96" height="2" fill="#e8dcff"/>
+  <rect x="93" y="164" width="52" height="2" fill="#00f0ff"/>
+  <rect x="92" y="169" width="222" height="9" fill="#0f0a1c" stroke="#3a2360"/>
+  <rect x="97" y="172" width="60" height="2" fill="#a892c9"/>
+  <!-- the working line -->
+  <rect x="93" y="182" width="4" height="4" fill="#00f0ff"/>
+  <rect x="100" y="183" width="44" height="2" fill="#00f0ff"/>
+  <!-- input bar -->
+  <rect x="86" y="189" width="234" height="11" fill="#0f0a1c"/>
+  <rect x="86" y="189" width="234" height="1" fill="#3a2360"/>
+  <rect x="93" y="192" width="3" height="5" fill="#00f0ff"/>
+  <rect x="99" y="192" width="3" height="5" fill="#00f0ff" fill-opacity="0.5"/>
+</svg>
