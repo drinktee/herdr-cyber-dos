@@ -55,6 +55,20 @@ not change your global `settings.json` or `keys.json`.
 
 ## Install
 
+### Ask your agent
+
+The shortest path. Paste this into a coding agent that can read your files
+(Claude Code, Codex, Cursor and the like), with Herdr running:
+
+```
+Read ~/.config/herdr-app/AGENTS.md, then add this layout: https://github.com/drinktee/herdr-cyber-dos/tree/main
+```
+
+The agent reads Herdr's own guide, copies the layout, theme and mods into your
+config, runs `herdr-app check` on each mod and switches to the layout.
+
+### By hand
+
 Launch Herdr once so it creates its shipped assets, and keep it running.
 
 ```sh
