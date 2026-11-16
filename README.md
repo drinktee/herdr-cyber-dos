@@ -27,7 +27,7 @@ terminal's default text is not harsh.
 
 | Agent status | Where it shows |
 |---|---|
-| `working` | A green dot breathing between 35% and 85% opacity every 4s, at the row's right |
+| `working` | A bright green braille spinner, one turn every 1.1s, at the row's right and in the pane header |
 | `blocked` | A red `NEEDS YOU` chip in the pane header and a red row marker |
 | `done` | A filled dot |
 | `idle` | A hollow ring |

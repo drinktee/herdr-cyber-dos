@@ -8,6 +8,7 @@ import { h_flex, v_flex } from "gpui-base";
 import { panes, props, run, theme, home } from "herdr";
 
 const UPPER = (s) => String(s ?? "").toUpperCase();
+const SPIN = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
 
 // Sidebar text a little brighter than the theme's own, so names read on chrome.
 const lift = (hex, k = 0.35) => {
@@ -68,8 +69,7 @@ export default class Pane extends View {
         .child(div().flex_1().min_w(0).truncate().text_size(10.5).font_bold().text_color(p.focused ? lift(t.accent, 0.25) : lift(t.muted, 0.35)).child(UPPER(p.title || name)))
         .when(st === "blocked", el => el.child(div().flex_none().px(5).h(12).flex().items_center()
           .bg(t.blocked + "26").text_size(7.5).font_bold().text_color(t.blocked).child("NEEDS YOU")))
-        .when(st === "working", el => el.child(div().size(4).flex_none().rounded_full().bg(t.working)
-          .loop("opacity", { from: 0.35, to: 0.9, period: 2600 })))
+        .when(st === "working", el => el.child(div().w(14).flex_none().text_size(14).text_center().text_color(t.ansi10).frames(SPIN, 110)))
         .when(st === "done", el => el.child(div().size(4).flex_none().rounded_full().bg(t.done)))
         .when(this.hovered, el => el.child(h_flex().h(14).flex_none()
           .child(this.button(t, `ph-r-${pane}`, "split-right", "pane.split", { direction: "right", pane }))

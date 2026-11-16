@@ -53,6 +53,7 @@ function conversation(a) {
   return usable(raw) || usable(a.tab_name);
 }
 const RANK = { blocked: 4, done: 3, working: 2, idle: 1 };
+const SPIN = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
 const kidStatus = (k, listed) => {
   const s = listed.get(k.address) ?? k.status;
   return s === "error" ? "blocked" : s === "done" ? "idle" : s;
@@ -182,11 +183,10 @@ export default class Agents extends View {
       .child(this.status(t, { status: st }, compact));
   }
 
-  // A dot per state: working pulses, blocked is a filled alert, idle is a hollow ring.
+  // A mark per state: working is a braille spinner, blocked is a filled alert, idle is a hollow ring.
   status(t, a, compact = false) {
     const color = t[a.status] ?? t.dim;
-    if (a.status === "working") return div().size(5).mx(3).flex_none().rounded_full().bg(t.working)
-      .loop("opacity", { from: 0.35, to: 0.9, period: 2600 });
+    if (a.status === "working") return div().w(compact ? 12 : 14).flex_none().text_size(compact ? 13 : 15).text_center().text_color(t.ansi10).frames(SPIN, 110);
     if (a.status === "blocked" && compact) return div().size(5).mx(3).flex_none().rounded_full().bg(t.blocked);
     if (a.status === "blocked") return div().flex_none().px(5).h(14).bg(t.blocked + "26").text_size(10).font_bold().text_color(t.blocked)
       .flex().items_center().child("NEEDS YOU");
@@ -261,7 +261,7 @@ export default class Agents extends View {
           .hover((s) => s.bg(t.hover))
           .on_click(() => run("pane.focus", { pane: a.pane }))
           .child(div().flex_1().min_w(0).whitespace_nowrap().text_right().text_size(11.5).text_color(t.dim).child(String(i + 1)))
-          .child(h_flex().w(10).flex_none().items_center().justify_center().child(this.status(t, a, true)));
+          .child(h_flex().w(14).flex_none().items_center().justify_center().child(this.status(t, a, true)));
       }
       const when = this.since(a);
       const idle = a.status === "idle" && !a.focused;

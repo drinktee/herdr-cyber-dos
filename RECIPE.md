@@ -22,7 +22,8 @@ One Herdr window, square everywhere, in a deep teal palette.
 
 ## How it behaves
 
-- Agent status: `working` a green dot breathing 0.35↔0.85 opacity every 4s;
+- Agent status: `working` a bright green braille spinner (`⠋⠙⠹…`), one turn every 1.1s,
+  on the agent row and in the pane header;
   `blocked` a red `NEEDS YOU` chip; `done` a filled dot; `idle` a hollow ring.
 - The active space and the focused agent take a 20% accent wash; the active tab
   takes 40% plus a 2px accent outline and a shadow.
@@ -120,4 +121,4 @@ they ship with Herdr.
 - The window shows the three cards flush against each other with no doubled
   borders, the active tab lifted, and a focused pane outlined in accent.
 - A second pane shows `PANE-02` in its header.
-- An agent that is working shows the breathing dot; the spaces footer counts it.
+- An agent that is working shows the braille spinner; the spaces footer counts it.
