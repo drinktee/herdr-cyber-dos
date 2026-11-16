@@ -246,9 +246,15 @@ export default class Spaces extends View {
     const dot = status === "blocked" || status === "done" ? t[status] : status === "working" ? t.working : t.dim;
     return v_flex()
       .relative().id(`space-${w.id}`).px(10).h(tree ? 28 : 30).flex_none().justify_center()
-      .when(on, (el) => el.bg(t.accent + "1f").rounded(2).mx(6).my(1).border_l(2).border_color(t.accent))
-      .when(!on, (el) => el.rounded(2).mx(6).my(1).hover((s) => s.bg(t.hover)))
+      .when(on, (el) => el.bg(t.accent + "28").rounded(2).mx(6).my(1).border_l(2).border_color(t.accent))
+      .when(!on, (el) => el.rounded(2).mx(6).my(1).hover((s) => s.bg(t.accent + "14")))
       .when(this.pressed !== null && this.over === i && this.pressed !== i, (el) => el.border_t(1).border_color(t.accent))
+      .on_hover((hot, cx) => {
+        if (hot) this.hot = w.id;
+        else if (this.hot === w.id) this.hot = null;
+        else return;
+        cx.notify();
+      })
       .on_mouse_down("left", () => { this.pressed = i; this.over = i; })
       .on_mouse_up("left", (_e, cx) => {
         const from = this.pressed;
@@ -263,7 +269,7 @@ export default class Spaces extends View {
           .when(Boolean(tree), el => el.pl(16).child(div().text_size(10.5).text_color(t.dim).child(tree)))
           .child(div().size(4).flex_none().rounded_full().bg(dot))
           .child(div().flex_shrink(0).max_w(140).truncate().text_size(13)
-            .text_color(on ? t.accent : lift(t.muted, 0.25)).child(label(w)))
+            .text_color(on ? t.accent : this.hot === w.id ? lift(t.foreground, 0.45) : lift(t.muted, 0.25)).child(label(w)))
           .child(g ? this.gitTail(g, tree, w.name, t) : div().flex_1()),
       );
   }
@@ -271,8 +277,8 @@ export default class Spaces extends View {
   compact({ w, i }, t) {
     const status = w.status ?? "idle";
     return h_flex().id(`space-${w.id}`).h(28).flex_none().justify_center().gap(3)
-      .when(w.active, (el) => el.bg(t.accent + "1f"))
-      .hover((s) => s.bg(t.hover))
+      .when(w.active, (el) => el.bg(t.accent + "28"))
+      .when(!w.active, (el) => el.hover((s) => s.bg(t.accent + "14")))
       .on_click(() => run("space.select", { id: w.id }))
       .child(div().text_size(10.5).text_color(w.active ? t.accent : t.dim).child(String(i + 1)))
       .child(div().size(4).rounded_full().bg(t[status] ?? t.dim));

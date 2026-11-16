@@ -168,8 +168,8 @@ export default class Agents extends View {
     const on = k.address === shown;
     return h_flex()
       .id(`sub-${k.address}`).pl(prefix.length ? 12 : 38).pr(10).h(28).flex_none().gap(0).items_center().text_size(12)
-      .when(on, (el) => el.bg(t.accent + "14"))
-      .hover((s) => s.bg(t.hover))
+      .when(on, (el) => el.bg(t.accent + "20"))
+      .when(!on, (el) => el.hover((s) => s.bg(t.accent + "10")))
       .on_click(() => this.peek(k.address))
       .children([
         ...prefix.map((l) => div().self_start().w(8).h(28).mr(3).flex_none()
@@ -258,7 +258,7 @@ export default class Agents extends View {
       const machine = a.address.includes("/") ? a.address.split("/")[0] : null;
       if (collapsed) {
         return h_flex().id(`ag-${a.address}`).h(26).px(6).flex_none().items_center().gap(3)
-          .hover((s) => s.bg(t.hover))
+          .when(!a.focused, (el) => el.hover((s) => s.bg(t.accent + "14")))
           .on_click(() => run("pane.focus", { pane: a.pane }))
           .child(div().flex_1().min_w(0).whitespace_nowrap().text_right().text_size(11.5).text_color(t.dim).child(String(i + 1)))
           .child(h_flex().w(14).flex_none().items_center().justify_center().child(this.status(t, a, true)));
@@ -282,14 +282,16 @@ export default class Agents extends View {
       // Grouped rows hang off the space header: one line, the conversation, with a tree elbow.
       const branched = Boolean(branch);
       const primary = branched ? (session || more || a.program?.name || label(a)) : (a.space_name || name);
-      const text = idle ? lift(t.muted, 0.5) : lift(t.foreground, 0.5);
+      const hot = !a.focused && this.hovered === a.address;
+      const text = hot ? lift(t.foreground, 0.7) : idle ? lift(t.muted, 0.5) : lift(t.foreground, 0.5);
       let el = h_flex()
         .id(`ag-${a.address}`).relative().px(branched ? 12 : 10).h(branched ? 30 : 44).flex_none().items_center().gap(6)
-        .when(a.focused, (el) => el.bg(t.accent + "1f"))
+        .when(a.focused, (el) => el.bg(t.accent + "28"))
         .when(a.focused && !branched, (el) => el.border_l(2).border_color(t.accent))
         .when(!branched, (el) => el.mx(6).my(1))
         .rounded(2)
-        .cursor_pointer().hover((s) => s.bg(t.hover))
+        .cursor_pointer()
+        .when(!a.focused, (el) => el.hover((s) => s.bg(t.accent + "14")))
         .on_hover((on, cx) => {
           if (on) this.hovered = a.address;
           else if (this.hovered === a.address) this.hovered = null;
