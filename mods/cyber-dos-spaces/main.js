@@ -244,7 +244,10 @@ export default class Spaces extends View {
     const on = w.active;
     return v_flex()
       .relative().id(`space-${w.id}`).px(10).h(24).flex_none().justify_center()
-      .when(on, (el) => el.bg(t.accent + "28").rounded(2).mx(6).border_l(2).border_color(t.accent))
+      // Both states carry the same 2px left border so the tree stem never
+      // shifts; only the selected row paints it.
+      .border_l(2).border_color(on ? t.accent : "#00000000")
+      .when(on, (el) => el.bg(t.accent + "28").rounded(2).mx(6))
       .when(!on, (el) => el.rounded(2).mx(6).hover((s) => s.bg(t.accent + "14")))
       .when(this.pressed !== null && this.over === i && this.pressed !== i, (el) => el.border_t(1).border_color(t.accent))
       .on_hover((hot, cx) => {
