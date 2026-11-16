@@ -28,8 +28,12 @@ One Herdr window, square everywhere, in a deep teal palette.
   takes 40% plus a 2px accent outline and a shadow.
 - Machine headings are uppercase and brightest; space names keep their own case
   and step down one level; row indices step down again.
-- Agent rows in the priority view show the terminal's own title on the second
-  line, skipping paths, bare numbers and the program's name.
+- Agent rows use the conversation title: the terminal title, dropping a trailing
+  ` | <space>`, and skipping paths, bare numbers and the program's name. A named
+  tab is the fallback. Priority shows the space name on the first line and the
+  title under it. Grouped by space shows an uppercase space header with no count,
+  and hangs each agent off it with a square 1.5px `dim` elbow; the row text is
+  the title. Sub-agents continue that line.
 - The spaces footer counts agents by status.
 - Tabs: click selects, double-click renames, right-click opens the menu, drag
   reorders, wheel scrolls the strip.

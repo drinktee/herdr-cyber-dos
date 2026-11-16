@@ -1,5 +1,5 @@
-// Blue DOS: agents in grouped or priority views — uppercase section headers with a
-// count, a status dot per row, and the agent's own state spelled out in caps.
+// Blue DOS: agents in grouped or priority views. Grouped spaces are a tree:
+// the space name heads the group, and each agent hangs off it by an elbow.
 
 import { View, div, image, svg } from "gpui-kit";
 import { v_flex, h_flex } from "gpui-base";
@@ -29,6 +29,28 @@ function title(tab, l) {
   const live = clean(l?.title);
   const telling = live && live !== prog && !/^[~/]|^[A-Za-z]:\\/.test(live) && !live.includes("@") && live.toLowerCase() !== l?.program?.key;
   return tab.name === prog && telling ? live : tab.name;
+}
+
+// The conversation, not the status or the program (those are the dot and the icon).
+// Drops a trailing " | <space>", and skips a path, a bare tab number, or the program's own name.
+// A tab someone named is the fallback.
+function conversation(a) {
+  const noise = new Set([a.program?.name, a.program?.key, a.app, a.status, a.space_name]
+    .map((s) => String(s ?? "").trim().toLowerCase()).filter(Boolean));
+  const usable = (s) => {
+    const v = clean(s);
+    if (!v || noise.has(v.toLowerCase())) return null;
+    if (/^[~/]|^[A-Za-z]:\\/.test(v) || /^\d+$/.test(v) || v.includes("@")) return null;
+    return v;
+  };
+  let raw = clean(a.title);
+  const space = String(a.space_name ?? "").trim().toLowerCase();
+  const pipe = raw.lastIndexOf(" | ");
+  if (pipe > 0) {
+    const right = raw.slice(pipe + 3).trim().toLowerCase();
+    if (right && right === space) raw = raw.slice(0, pipe).trim();
+  }
+  return usable(raw) || usable(a.tab_name);
 }
 const RANK = { blocked: 4, done: 3, working: 2, idle: 1 };
 const kidStatus = (k, listed) => {
@@ -138,19 +160,23 @@ export default class Agents extends View {
     });
   }
 
-  subRow(t, s, shown, compact) {
+  subRow(t, s, shown, compact, prefix = []) {
     const k = s.t;
     const st = kidStatus(k, this.listed);
     const pic = icon(k.program, 12, t.foreground);
     const on = k.address === shown;
     return h_flex()
-      .id(`sub-${k.address}`).pl(38).pr(10).h(28).flex_none().gap(0).items_center().text_size(12)
+      .id(`sub-${k.address}`).pl(prefix.length ? 12 : 38).pr(10).h(28).flex_none().gap(0).items_center().text_size(12)
       .when(on, (el) => el.bg(t.accent + "14"))
       .hover((s) => s.bg(t.hover))
       .on_click(() => this.peek(k.address))
-      .children(s.lines.map(l => div().self_start().mt(-3).w(8).h(14).mr(3).flex_none()
-        .when(Boolean(l), el => el.border_l(1).border_color(t.border))
-        .when(l === "└" || l === "├", el => el.border_b(1).rounded_bl(4))))
+      .children([
+        ...prefix.map((l) => div().self_start().w(8).h(28).mr(3).flex_none()
+          .when(Boolean(l), (el) => el.border_l(1.5).border_color(t.dim))),
+        ...s.lines.map((l) => div().self_start().mt(-3).w(8).h(14).mr(3).flex_none()
+          .when(Boolean(l), (el) => el.border_l(1.5).border_color(t.dim))
+          .when(l === "└" || l === "├", (el) => el.border_b(1.5).border_color(t.dim))),
+      ])
       .when(Boolean(pic), el => el.child(div().mr(6).child(pic)))
       .child(div().flex_1().truncate().text_color(on ? t.accent : t.dim).child(k.name || k.template || k.program?.name || k.address))
       .child(this.status(t, { status: st }, compact));
@@ -190,11 +216,12 @@ export default class Agents extends View {
     list = [...pinned, ...rest];
     setAgentOrder(list.map((a) => a.address));
 
-    const withKids = (a, i) => {
+    const withKids = (a, i, branch = null) => {
       const subs = collapsed ? [] : this.tree(all, a.address);
-      const r = row(a, i, subs);
+      const r = row(a, i, subs, branch);
       if (this.folded.has(a.address)) return [r];
-      return [r, ...subs.map((s) => this.subRow(t, s, shown, byPriority))];
+      const prefix = branch ? [branch.last ? "" : "│"] : [];
+      return [r, ...subs.map((s) => this.subRow(t, s, shown, byPriority, prefix))];
     };
 
     const fold = (a, subs) => {
@@ -225,7 +252,7 @@ export default class Agents extends View {
       if (detail.get(a.address) == null && seen[`${a.space_name}\u0000`] > 1) detail.set(a.address, label(a));
     }
 
-    const row = (a, i, subs = []) => {
+    const row = (a, i, subs = [], branch = null) => {
       const pic = icon(a.program, 13, t.foreground);
       const more = detail.get(a.address);
       const machine = a.address.includes("/") ? a.address.split("/")[0] : null;
@@ -251,46 +278,45 @@ export default class Agents extends View {
         .child(svg(`mods/cyber-dos-workspace-chrome/${isPinned ? "pin-off" : "pin"}.svg`).size(11));
       const full = byPriority || isPinned;
       const name = full ? a.space_name || label(a) : more ?? (/^\d+$/.test(label(a)) ? a.program?.name || label(a) : label(a));
-      // The row's own state color, as the reference's "working · Claude" line.
-      const stateColor = a.status === "blocked" ? t.blocked : a.status === "done" ? t.done : a.status === "working" ? t.working : t.dim;
-      // The terminal's own title, when it says something a tab name would not:
-      // skip paths, the program's own name and a bare tab number.
-      const raw = clean(a.title);
-      const session = raw && !/^[~/]|^[A-Za-z]:\\/.test(raw) && !/^\d+$/.test(raw)
-        && raw.toLowerCase() !== (a.program?.name ?? "").toLowerCase()
-        && raw.toLowerCase() !== (a.program?.key ?? "").toLowerCase() ? raw : null;
-      return h_flex()
-        .id(`ag-${a.address}`).relative().px(10).h(44).flex_none().items_center().gap(6)
-        .when(a.focused, (el) => el.bg(t.accent + "1f").border_l(2).border_color(t.accent).mx(6).my(1))
-        .when(!a.focused, (el) => el.mx(6).my(1).rounded(2))
+      const session = conversation(a);
+      // Grouped rows hang off the space header: one line, the conversation, with a tree elbow.
+      const branched = Boolean(branch);
+      const primary = branched ? (session || more || a.program?.name || label(a)) : (a.space_name || name);
+      const text = idle ? lift(t.muted, 0.5) : lift(t.foreground, 0.5);
+      let el = h_flex()
+        .id(`ag-${a.address}`).relative().px(branched ? 12 : 10).h(branched ? 30 : 44).flex_none().items_center().gap(6)
+        .when(a.focused, (el) => el.bg(t.accent + "1f"))
+        .when(a.focused && !branched, (el) => el.border_l(2).border_color(t.accent))
+        .when(!branched, (el) => el.mx(6).my(1))
+        .rounded(2)
         .cursor_pointer().hover((s) => s.bg(t.hover))
         .on_hover((on, cx) => {
           if (on) this.hovered = a.address;
           else if (this.hovered === a.address) this.hovered = null;
           cx.notify();
         })
-        .on_click(() => run("pane.focus", { pane: a.pane }))
+        .on_click(() => run("pane.focus", { pane: a.pane }));
+      if (branched) el = el.child(v_flex().w(8).h(30).mr(3).flex_none()
+        .child(div().w(8).h(15).border_l(1.5).border_b(1.5).border_color(t.dim))
+        .child(div().w(8).h(15).when(!branch.last, (n) => n.border_l(1.5).border_color(t.dim))));
+      return el
         .when(Boolean(pic), el => el.child(div().id(`agent-fold-${a.address}`)
           .when(subs.length > 0, el => el.on_click((_e, cx) => {
             cx.stop_propagation();
             this.folded.has(a.address) ? this.folded.delete(a.address) : this.folded.add(a.address);
             cx.notify();
           })).child(pic)))
-        .child(v_flex().flex_1().min_w(0).justify_center()
-          .child(div().truncate().text_size(13).font_medium().text_color(idle ? lift(t.muted, 0.5) : lift(t.foreground, 0.5)).child(a.space_name || name))
-          // The second line: the session's own title where there is one (priority
-          // sections already say the status), else the status and program.
-          .when(byPriority && Boolean(session), el => el.child(div().truncate().text_size(11)
-            .text_color(lift(t.dim, 0.3)).child(session)))
-          .when(!byPriority, el => el.child(h_flex().gap(3).items_center()
-            .child(div().truncate().text_size(11.5).text_color(stateColor).child(UPPER(a.status || "idle")))
-            .child(div().text_size(11.5).text_color(t.dim).child("·"))
-            .child(div().truncate().text_size(11.5).text_color(t.dim).child(a.program?.name || "shell")))))
-        .when(Boolean(machine), el => el.child(div().text_size(9.5).text_color(t.dim).child(machine)))
+        .child(branched
+          ? div().flex_1().min_w(0).truncate().text_size(13).font_medium().text_color(text).child(primary)
+          : v_flex().flex_1().min_w(0).justify_center()
+            .child(div().truncate().text_size(13).font_medium().text_color(text).child(primary))
+            .when(Boolean(session), el => el.child(div().truncate().text_size(11.5)
+              .text_color(lift(t.muted, 0.45)).child(session))))
+        .when(!branched && Boolean(machine), el => el.child(div().text_size(9.5).text_color(t.dim).child(machine)))
         .when(subs.length > 0, el => el.child(fold(a, subs)))
         .when(this.hovered === a.address, el => el.child(pin))
         .when(this.hovered !== a.address && Boolean(when), el => el.child(div().flex_none().text_size(11.5).text_color(t.dim).child(duration(now - when))))
-        .child(this.status(t, a, byPriority && !isPinned));
+        .child(this.status(t, a, branched || (byPriority && !isPinned)));
     };
 
     const groups = pinned.length ? [{ id: "pinned", label: "PINNED", status: null, members: pinned }] : [];
@@ -298,7 +324,10 @@ export default class Agents extends View {
       const r = rankOf(a) || RANK.idle;
       const id = byPriority ? `sec-${r}` : `sp-${a.space}`;
       if (groups.at(-1)?.id === id) groups.at(-1).members.push(a);
-      else groups.push({ id, label: byPriority ? SECTION[r] : a.space_name || "", status: byPriority ? SECTION_STATUS[r] : null, members: [a] });
+      else groups.push({
+        id, label: byPriority ? SECTION[r] : a.space_name || "", status: byPriority ? SECTION_STATUS[r] : null, members: [a],
+        machine: !byPriority && a.address.includes("/") ? a.address.split("/")[0] : null,
+      });
     }
 
     const header = (g) => {
@@ -310,8 +339,9 @@ export default class Agents extends View {
           open ? this.folded.add(g.id) : this.folded.delete(g.id);
           cx.notify();
         })
-        .child(div().truncate().text_color(t[g.status] ?? t.dim).child(UPPER(g.label)))
-        .when(byPriority || !open, (el) => el.child(div().text_color(t.dim).child(String(g.members.length))))
+        .child(div().truncate().text_color(t[g.status] ?? t.dim).child(UPPER(g.label || "space")))
+        .when(Boolean(g.machine), (el) => el.child(div().text_size(9.5).font_medium().text_color(t.dim).child(g.machine)))
+        .when(byPriority || (!open && !String(g.id).startsWith("sp-")), (el) => el.child(div().text_color(t.dim).child(String(g.members.length))))
         .child(div().flex_1())
         .when(!open, (el) => el
           .when(!byPriority && top && top !== "idle", (el) => el.child(this.status(t, { status: top }, true)))
@@ -321,9 +351,13 @@ export default class Agents extends View {
       ? list.flatMap(withKids)
       : byPriority
         ? groups.flatMap((g) => [header(g), ...(this.folded.has(g.id) ? [] : g.members.flatMap(withKids))])
-        : groups.flatMap((g) => g.id === "pinned"
-            ? [header(g), ...(this.folded.has(g.id) ? [] : g.members.flatMap(withKids))]
-            : g.members.flatMap(withKids));
+        : groups.flatMap((g) => {
+            const body = this.folded.has(g.id) ? []
+              : g.id === "pinned"
+                ? g.members.flatMap(withKids)
+                : g.members.flatMap((a, i) => withKids(a, i, { last: i === g.members.length - 1 }));
+            return [header(g), ...body];
+          });
 
     return v_flex().size_full().min_h(0).bg(t.surface).text_size(12)
       .when(!collapsed, (el) =>

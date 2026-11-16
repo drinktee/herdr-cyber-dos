@@ -33,9 +33,11 @@ terminal's default text is not harsh.
 | `idle` | A hollow ring |
 
 - **Space rows** take a 20% accent wash with a 2px accent bar on the left when active.
-- **Agent rows** take the same wash. In the priority view the second line is the
-  terminal's own title (what the agent set), skipped when it is a path, a bare
-  number or the program's name.
+- **Agent rows** take the same wash. The name is the conversation title (the
+  terminal title, without a trailing ` | <space>`, skipping a path, a bare
+  number or the program's name). Priority shows the space on the first line and
+  the title under it. Grouped by space uses a space header and a square elbow;
+  the row is the title, and the header has no count.
 - **The spaces footer** counts agents by status: four dots and their numbers.
 - **Clicking** a tab selects it; double-click renames; right-click opens a menu.
   Dragging a tab reorders. Clicking a space or agent focuses it.
