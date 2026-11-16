@@ -264,12 +264,12 @@ export default class Spaces extends View {
       .on_mouse_down("right", () => this.menu(w))
       .child(
         h_flex().gap(6).items_center()
-          // A space hangs off its machine the way an agent hangs off its space:
-          // a stem from the machine header, with a corner on the last child.
+          // A space hangs off its machine exactly as an agent hangs off its
+          // space: every row turns in from the stem with a corner, and the stem
+          // carries on below all but the last.
           .child(v_flex().w(8).h(24).mr(3).flex_none()
-            .child(div().w(8).h(12).border_l(1.5).border_color(t.dim))
-            .when(!last, el => el.child(div().w(8).h(12).border_l(1.5).border_color(t.dim)))
-            .when(last, el => el.child(div().w(8).h(12).border_l(1.5).border_b(1.5).border_color(t.dim))))
+            .child(div().w(8).h(12).border_l(1.5).border_b(1.5).border_color(t.dim))
+            .child(div().w(8).h(12).when(!last, el => el.border_l(1.5).border_color(t.dim))))
           .when(Boolean(tree), el => el.pl(16).child(div().text_size(10.5).text_color(t.dim).child(tree)))
           .child(div().flex_shrink(0).max_w(140).truncate().text_size(13)
             .text_color(on ? t.accent : this.hot === w.id ? lift(t.foreground, 0.45) : lift(t.muted, 0.25)).child(label(w)))
