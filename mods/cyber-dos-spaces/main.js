@@ -310,7 +310,7 @@ export default class Spaces extends View {
           .child(div().text_size(13).font_family("FiraCode Nerd Font").font_bold().text_color(t.muted).child("SPACES"))))
         .child(div().id("space-new").px(5).py(2).text_size(14).text_color(t.dim)
           .hover(s => s.bg(t.hover).text_color(t.accent)).on_click(() => run("space.new")).child("+")))
-      .child(v_flex().flex_1().min_h(0).overflow_y_scrollbar().mode("always").py(3)
+      .child(v_flex().flex_1().min_h(0).overflow_y_scrollbar().mode("scrolling").py(3)
         .on_mouse_up("left", (_e, cx) => { this.pressed = null; cx.notify(); })
         .children(this.grouped(t, collapsed)))
       .when(!collapsed, el => el.child(h_flex().h(24).px(10).gap(10).flex_none().items_center()

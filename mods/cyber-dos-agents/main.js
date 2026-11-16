@@ -381,7 +381,7 @@ export default class Agents extends View {
       .when(list.length === 0 && !collapsed, (el) =>
         el.child(div().px(10).py(4).text_size(11.5).text_color(t.dim).child("NO AGENTS YET — START ONE FROM + IN THE TABS")),
       )
-      .child(v_flex().id("ag-list").flex_1().min_h(0).overflow_y_scrollbar().mode("always").py(2).children(rows))
+      .child(v_flex().id("ag-list").flex_1().min_h(0).overflow_y_scrollbar().mode("scrolling").py(2).children(rows))
       .child(
         h_flex().h(26).px(10).items_center().justify_end()
           .when(collapsed, (el) => el.justify_center().px(0))

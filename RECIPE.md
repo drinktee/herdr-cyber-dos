@@ -36,6 +36,8 @@ One Herdr window, square everywhere, in a deep teal palette.
   and hangs each agent off it with a square 1.5px `dim` elbow; the row text is
   the title. Sub-agents continue that line.
 - The spaces footer counts agents by status.
+- The spaces and agents lists scroll; their scrollbars appear only while
+  scrolling (`.mode("scrolling")`), so a long list never leaves a bar on screen.
 - Tabs: click selects, double-click renames, right-click opens the menu, drag
   reorders, wheel scrolls the strip.
 
