@@ -143,9 +143,16 @@ export default class Changes extends View {
   // list is a plain scrolling column, so nothing has to predict a height.
   diffRow({ kind, number, text }, t) {
     if (kind === "@") return div().w_full().px(12).bg(t.raised).text_color(t.dim).child(text);
-    return h_flex().w_full().items_start().gap(10).when(kind === "+", (e) => e.bg(t.ansi2 + "18")).when(kind === "-", (e) => e.bg(t.ansi1 + "18"))
-      .child(div().w(38).flex_none().text_right().text_color(t.dim).child(number === undefined ? "" : String(number)))
-      .child(div().flex_1().min_w(0).child(text));
+    const added = kind === "+";
+    const removed = kind === "-";
+    // Bright ansi, not the muted pair: those sit too close to the panel's gray-cyan text.
+    const ink = added ? t.ansi10 : removed ? t.ansi9 : t.foreground;
+    return h_flex().w_full().items_start().gap(10)
+      .border_l(2).border_color(added ? t.ansi10 : removed ? t.ansi9 : t.background)
+      .when(added, (e) => e.bg(t.ansi2 + "40"))
+      .when(removed, (e) => e.bg(t.ansi1 + "40"))
+      .child(div().w(38).flex_none().text_right().text_color(added || removed ? ink : t.dim).child(number === undefined ? "" : String(number)))
+      .child(div().flex_1().min_w(0).text_color(ink).child(text));
   }
 
   render(cx) {
