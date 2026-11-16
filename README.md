@@ -13,9 +13,9 @@ A single window in three bands:
   then numbered tabs as chips. The active tab lifts: rounded, a 40% accent wash,
   a shadow and a 2px accent outline. `FILES` and `CHANGES` sit at the far right.
 - **Left sidebar**, three square cards flush against each other and against the
-  window edge: `SPACES` (machines as headings, spaces under them, git branch and
-  ahead/behind at the row's right), `AGENTS` (grouped by urgency or by space), and
-  a footer with Settings and Add machine.
+  window edge: `SPACES` (machines as headings, spaces hanging under each with a
+  tree stem, git branch and ahead/behind at the row's right), `AGENTS` (grouped
+  by urgency or by space), and a footer with Settings and Add machine.
 - **Work area**, the active tab's panes as cards with a 6px gap. Each pane has a
   two-row header: `PANE-01 / <terminal title>` and the folder with its branch.
 

@@ -28,7 +28,9 @@ One Herdr window, square everywhere, in a deep teal palette.
 - The active space and the focused agent take a 20% accent wash; the active tab
   takes 40% plus a 2px accent outline and a shadow.
 - Machine headings are uppercase and brightest; space names keep their own case
-  and step down one level; row indices step down again.
+  and step down one level; row indices step down again. Each space hangs off
+  its machine's heading with a 1.5px `dim` stem, closed by a square corner on
+  the last space under that machine, as agents hang off their space.
 - Agent rows use the conversation title: the terminal title, dropping a trailing
   ` | <space>`, and skipping paths, bare numbers and the program's name. A named
   tab is the fallback. Priority shows the space name on the first line and the

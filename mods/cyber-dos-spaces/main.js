@@ -189,7 +189,7 @@ export default class Spaces extends View {
   // "THIS COMPUTER" style header per machine, with a node count on the right.
   grouped(t, collapsed) {
     const rows = this.ordered();
-    const draw = (r) => (collapsed ? this.compact(r, t) : this.row(r, t));
+    const draw = (r, last) => (collapsed ? this.compact(r, t) : this.row(r, t, last));
     const remote = [...new Set([...rows.map(r => r.w.machine).filter(Boolean), ...this.machines.map(m => m.name)])].sort();
     const loading = m => {
       const layout = machines().find(k => k.name === m)?.layout;
@@ -222,7 +222,7 @@ export default class Spaces extends View {
         .text_size(12).text_color(t.dim).hover(s => s.text_color(t.accent))
         .on_click(() => run("space.new", m ? { machine: m } : {}))
         .child(svg("mods/cyber-dos-workspace-chrome/plus.svg").size(10)).when(!collapsed, el => el.child("NEW SPACE"));
-      return [head, ...(folded ? [] : mine.length ? mine.map(draw) : [loading(m) ? loadingRow(m) : empty])];
+      return [head, ...(folded ? [] : mine.length ? mine.map((r, i) => draw(r, i === mine.length - 1)) : [loading(m) ? loadingRow(m) : empty])];
     });
   }
 
@@ -240,7 +240,7 @@ export default class Spaces extends View {
 
   // A space row: the selected one gets a pink edge and a tinted fill, as the
   // reference marks its active node.
-  row({ w, i, g, tree }, t) {
+  row({ w, i, g, tree }, t, last = false) {
     const on = w.active;
     const status = w.status ?? "idle";
     const dot = status === "blocked" || status === "done" ? t[status] : status === "working" ? t.working : t.dim;
@@ -266,6 +266,12 @@ export default class Spaces extends View {
       .on_mouse_down("right", () => this.menu(w))
       .child(
         h_flex().gap(6).items_center()
+          // A space hangs off its machine the way an agent hangs off its space:
+          // a stem from the machine header, with a corner on the last child.
+          .child(v_flex().w(8).h(30).mr(3).flex_none()
+            .child(div().w(8).h(15).border_l(1.5).border_color(t.dim))
+            .when(!last, el => el.child(div().w(8).h(15).border_l(1.5).border_color(t.dim)))
+            .when(last, el => el.child(div().w(8).h(15).border_l(1.5).border_b(1.5).border_color(t.dim))))
           .when(Boolean(tree), el => el.pl(16).child(div().text_size(10.5).text_color(t.dim).child(tree)))
           .child(div().size(4).flex_none().rounded_full().bg(dot))
           .child(div().flex_shrink(0).max_w(140).truncate().text_size(13)
