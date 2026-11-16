@@ -8,7 +8,7 @@
 // Upstream: https://github.com/herdrdev/herdr-app (Apache-2.0).
 
 import { View, div, svg } from "gpui-kit";
-import { v_flex, h_flex, InputState, Input } from "gpui-base";
+import { v_flex, h_flex, InputState, Input, ScrollHandle } from "gpui-base";
 import { agents, spaces, terminals, run, hc, theme, props, closeOverlay, openOverlay, shared, setShared } from "herdr";
 
 const MARK = { ansi6: "#22a99a", ansi3: "#e3814f", ansi4: "#5b8def", ansi5: "#8b7cf6", ansi2: "#3fae6a", ansi1: "#d9649a" };
@@ -37,6 +37,35 @@ function spaceColor(t, p) {
   return c.startsWith("#") ? c : (MARK[c] ?? t[c]);
 }
 
+const clean = (s) => (s ?? "").replace(/^[^\p{L}\p{N}]+/u, "").trim();
+
+// The terminal's own title, without a trailing " | <space>". Not the program name or a bare number.
+function talkOf(a, spaceName) {
+  const noise = new Set([a.program?.name, a.program?.key, a.app, a.status, spaceName]
+    .map((s) => String(s ?? "").trim().toLowerCase()).filter(Boolean));
+  let raw = clean(a.title);
+  const space = String(spaceName ?? "").trim().toLowerCase();
+  const pipe = raw.lastIndexOf(" | ");
+  if (pipe > 0 && raw.slice(pipe + 3).trim().toLowerCase() === space) raw = raw.slice(0, pipe).trim();
+  const v = clean(raw);
+  if (!v || noise.has(v.toLowerCase())) return null;
+  if (/^[~/]|^[A-Za-z]:\\/.test(v) || /^\d+$/.test(v) || v.includes("@")) return null;
+  return v;
+}
+
+// Position, then a name someone gave, then the conversation. The number is the
+// tab's current place, the same one the tab bar shows.
+function rowLabel(w, ctx, mine) {
+  const n = String(ctx.index);
+  const named = ctx.named && ctx.name && ctx.name !== n;
+  const talks = [];
+  for (const a of mine) {
+    const talk = talkOf(a, w.name);
+    if (talk && talk !== ctx.name && !talks.includes(talk)) talks.push(talk);
+  }
+  return [n, ...(named ? [ctx.name] : []), ...talks].join(" · ");
+}
+
 export default class Picker extends View {
   init(_props, cx) {
     this.filter = "";
@@ -46,6 +75,7 @@ export default class Picker extends View {
     this.input.focus();
     cx.timer.after(600, () => this.input.focus());
     this.at = null;
+    this.listScroll = ScrollHandle.new();
     this.showEarlier = false;
     this.machines = [];
     this.handle = cx.focus_handle();
@@ -78,7 +108,7 @@ export default class Picker extends View {
           const mine = all.filter((a) => a.tab === ctx.id);
           return { w, ctx, mine, team: teamOf(mine.map((a) => a.address)) };
         })
-        .filter((c) => !f || [w.name, c.ctx.name, ...c.mine.map((a) => a.program?.name ?? "")].join(" ").toLowerCase().includes(f));
+        .filter((c) => !f || [w.name, rowLabel(w, c.ctx, c.mine), ...c.mine.map((a) => a.program?.name ?? "")].join(" ").toLowerCase().includes(f));
       return { w, ctxs };
     });
     const busy = groups.filter((p) => p.w.status && p.ctxs.length);
@@ -121,6 +151,8 @@ export default class Picker extends View {
     if (this.at === null) this.at = Math.max(0, pickable.findIndex((r) => r.kind === "ctx" && r.w.active && r.ctx.active));
     this.at = Math.min(this.at, pickable.length - 1);
     const sel = pickable[this.at];
+    const selAt = rows.indexOf(sel);
+    if (selAt >= 0) this.listScroll.scroll_to_item(selAt);
 
     const row = (r) => {
       if (r.kind === "head") {
@@ -182,7 +214,7 @@ export default class Picker extends View {
         .hover((s) => s.bg(t.hover))
         .on_click(() => this.go(r))
         .child(this.glyph(t, r.ctx.status))
-        .child(div().flex_1().truncate().text_color(t.foreground).when(here, (d) => d.font_semibold()).child(r.ctx.name))
+        .child(div().flex_1().truncate().text_color(t.foreground).when(here, (d) => d.font_semibold()).child(rowLabel(r.w, r.ctx, r.mine)))
         .when(r.ctx.status === "blocked", (el) => el.child(div().text_size(11).text_color(t.blocked).child("needs you")))
         .when(r.ctx.status === "done", (el) => el.child(div().text_size(11).text_color(t.done).child("finished")))
         .child(div().text_size(11).text_color(t.dim).child(who + (r.team ? `  +${r.team}` : "")));
@@ -217,7 +249,7 @@ export default class Picker extends View {
           .child(svg("mods/workspace-chrome/search.svg").size(15).text_color(t.dim))
           .child(Input.new(this.input).flex_1().h_full().text_size(12.8).text_color(t.foreground)),
       )
-      .child(v_flex().h(Math.min(320, rows.reduce((h, r) => h + (r.kind === "head" ? 31 : r.kind === "earlier" ? 25 : 32), 0))).min_h(0).flex_shrink(1).overflow_y_scrollbar().children(rows.map(row)));
+      .child(v_flex().id("pk-list").h(Math.min(320, rows.reduce((h, r) => h + (r.kind === "head" ? 31 : r.kind === "earlier" ? 25 : 32), 0))).min_h(0).flex_shrink(1).overflow_y_scrollbar().track_scroll(this.listScroll).children(rows.map(row)));
 
   }
 }
