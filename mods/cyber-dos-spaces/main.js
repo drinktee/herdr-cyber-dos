@@ -242,12 +242,10 @@ export default class Spaces extends View {
   // reference marks its active node.
   row({ w, i, g, tree }, t, last = false) {
     const on = w.active;
-    const status = w.status ?? "idle";
-    const dot = status === "blocked" || status === "done" ? t[status] : status === "working" ? t.working : t.dim;
     return v_flex()
-      .relative().id(`space-${w.id}`).px(10).h(tree ? 28 : 30).flex_none().justify_center()
-      .when(on, (el) => el.bg(t.accent + "28").rounded(2).mx(6).my(1).border_l(2).border_color(t.accent))
-      .when(!on, (el) => el.rounded(2).mx(6).my(1).hover((s) => s.bg(t.accent + "14")))
+      .relative().id(`space-${w.id}`).px(10).h(24).flex_none().justify_center()
+      .when(on, (el) => el.bg(t.accent + "28").rounded(2).mx(6).border_l(2).border_color(t.accent))
+      .when(!on, (el) => el.rounded(2).mx(6).hover((s) => s.bg(t.accent + "14")))
       .when(this.pressed !== null && this.over === i && this.pressed !== i, (el) => el.border_t(1).border_color(t.accent))
       .on_hover((hot, cx) => {
         if (hot) this.hot = w.id;
@@ -268,12 +266,11 @@ export default class Spaces extends View {
         h_flex().gap(6).items_center()
           // A space hangs off its machine the way an agent hangs off its space:
           // a stem from the machine header, with a corner on the last child.
-          .child(v_flex().w(8).h(30).mr(3).flex_none()
-            .child(div().w(8).h(15).border_l(1.5).border_color(t.dim))
-            .when(!last, el => el.child(div().w(8).h(15).border_l(1.5).border_color(t.dim)))
-            .when(last, el => el.child(div().w(8).h(15).border_l(1.5).border_b(1.5).border_color(t.dim))))
+          .child(v_flex().w(8).h(24).mr(3).flex_none()
+            .child(div().w(8).h(12).border_l(1.5).border_color(t.dim))
+            .when(!last, el => el.child(div().w(8).h(12).border_l(1.5).border_color(t.dim)))
+            .when(last, el => el.child(div().w(8).h(12).border_l(1.5).border_b(1.5).border_color(t.dim))))
           .when(Boolean(tree), el => el.pl(16).child(div().text_size(10.5).text_color(t.dim).child(tree)))
-          .child(div().size(4).flex_none().rounded_full().bg(dot))
           .child(div().flex_shrink(0).max_w(140).truncate().text_size(13)
             .text_color(on ? t.accent : this.hot === w.id ? lift(t.foreground, 0.45) : lift(t.muted, 0.25)).child(label(w)))
           .child(g ? this.gitTail(g, tree, w.name, t) : div().flex_1()),
