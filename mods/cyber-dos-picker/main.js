@@ -1,15 +1,15 @@
 // Go to a tab. Drops from the Terminals layout's space chip (popup, at: "top"). Spaces with
 // something that needs you come first, quiet spaces (no agent running)
 // fold into "earlier". Type to filter, ↑/↓ and Enter to go, ctrl+d to close
-// a tab, Esc to leave. Last rows: new work (a tab here, a space on this
-// computer or on each connected machine).
+// a tab, Esc to leave. Last rows: a new tab, each installed agent, then a new
+// space on this computer or on each connected machine.
 
 // Modified from Herdr 0.1.7 for Square Dracula.
 // Upstream: https://github.com/herdrdev/herdr-app (Apache-2.0).
 
-import { View, div, svg } from "gpui-kit";
+import { View, div, image, svg } from "gpui-kit";
 import { v_flex, h_flex, InputState, Input, ScrollHandle } from "gpui-base";
-import { agents, spaces, terminals, run, hc, theme, props, closeOverlay, openOverlay, shared, setShared } from "herdr";
+import { agents, knownAgents, spaces, terminals, run, hc, theme, props, closeOverlay, openOverlay, shared, setShared } from "herdr";
 
 const MARK = { ansi6: "#22a99a", ansi3: "#e3814f", ansi4: "#5b8def", ansi5: "#8b7cf6", ansi2: "#3fae6a", ansi1: "#d9649a" };
 
@@ -71,18 +71,26 @@ export default class Picker extends View {
     this.filter = "";
     this.input = InputState.new({ placeholder: "Go to a tab, space or agent…" });
     this.input.on("change", (_e, cx) => { this.filter = this.input.value(); this.at = 0; cx.notify(); });
-    this.input.on("submit", () => this.go(this.rows().filter(r => r.kind === "ctx" || r.kind === "new" || r.kind === "space")[this.at]));
+    this.input.on("submit", () => this.go(this.rows().filter(r => r.kind === "ctx" || r.kind === "new" || r.kind === "agent" || r.kind === "space")[this.at]));
     this.input.focus();
     cx.timer.after(600, () => this.input.focus());
     this.at = null;
     this.listScroll = ScrollHandle.new();
     this.showEarlier = false;
     this.machines = [];
+    this.starters = [];
     this.handle = cx.focus_handle();
     cx.spawn(async (cx) => {
       try {
         const r = await hc(["machine", "ls", "--json"]);
         if (r.code === 0) this.machines = (JSON.parse(r.stdout).machines ?? []).filter((m) => m.state === "connected" && !m.temporary).map((m) => m.name);
+      } catch {}
+      cx.notify();
+    });
+    cx.spawn(async (cx) => {
+      try {
+        const on = spaces().find((s) => s.active)?.machine;
+        this.starters = (await knownAgents({ on })).filter((a) => a.installed);
       } catch {}
       cx.notify();
     });
@@ -125,6 +133,9 @@ export default class Picker extends View {
       if (this.showEarlier || f) quiet.forEach(add);
     }
     out.push({ kind: "new" });
+    for (const agent of this.starters) {
+      if (!f || `new ${agent.name} ${agent.key ?? ""}`.toLowerCase().includes(f)) out.push({ kind: "agent", agent });
+    }
     out.push({ kind: "space", machine: null });
     for (const m of this.machines) out.push({ kind: "space", machine: m });
     return out;
@@ -135,6 +146,10 @@ export default class Picker extends View {
     this.close();
     if (r.kind === "ctx") run("tab.select", { id: r.ctx.id });
     else if (r.kind === "new") run("tab.new");
+    else if (r.kind === "agent") {
+      const space = spaces().find((s) => s.active);
+      run("tab.new", { name: r.agent.name, ...(space ? { space: space.id } : {}), argv: r.agent.run });
+    }
     else if (r.kind === "space") run("space.new", r.machine ? { machine: r.machine } : {});
   }
 
@@ -146,7 +161,7 @@ export default class Picker extends View {
   render() {
     const t = theme();
     const rows = this.rows();
-    const pickable = rows.filter((r) => r.kind === "ctx" || r.kind === "new" || r.kind === "space");
+    const pickable = rows.filter((r) => r.kind === "ctx" || r.kind === "new" || r.kind === "agent" || r.kind === "space");
     // Opens on where you are.
     if (this.at === null) this.at = Math.max(0, pickable.findIndex((r) => r.kind === "ctx" && r.w.active && r.ctx.active));
     this.at = Math.min(this.at, pickable.length - 1);
@@ -185,10 +200,13 @@ export default class Picker extends View {
           .child(`earlier: ${r.count} quiet space${r.count > 1 ? "s" : ""} ${this.showEarlier ? "▴" : "▾"}`);
       }
       const on = r === sel;
-      if (r.kind === "new" || r.kind === "space") {
-        const label = r.kind === "new" ? "new tab" : r.machine ? `new space on ${r.machine}` : "new space";
+      if (r.kind === "new" || r.kind === "agent" || r.kind === "space") {
+        const label = r.kind === "new" ? "new tab" : r.kind === "agent" ? `new ${r.agent.name}` : r.machine ? `new space on ${r.machine}` : "new space";
+        const mark = r.kind === "agent" && r.agent.icon
+          ? (r.agent.tint ? svg(r.agent.icon).size(14).flex_none().text_color(t.foreground) : image(r.agent.icon).size(14).flex_none())
+          : div().w(14).child("+");
         return h_flex()
-          .id(r.kind === "new" ? "pk-new" : `pk-space-${r.machine ?? "here"}`)
+          .id(r.kind === "new" ? "pk-new" : r.kind === "agent" ? `pk-agent-${r.agent.key}` : `pk-space-${r.machine ?? "here"}`)
           .px(14)
           .h(32)
           .items_center()
@@ -198,7 +216,7 @@ export default class Picker extends View {
           .when(on, (el) => el.bg(t.hover))
           .hover((s) => s.bg(t.hover))
           .on_click(() => this.go(r))
-          .child(div().w(12).child("+"))
+          .child(mark)
           .child(label);
       }
       const who = r.mine.map((a) => a.program?.name ?? "agent").join(" · ");

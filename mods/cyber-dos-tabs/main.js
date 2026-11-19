@@ -5,6 +5,26 @@ import { h_flex } from "gpui-base";
 import { spaces, panes, run, openOverlay, theme, window, shared, layout } from "herdr";
 
 const UPPER = (s) => String(s ?? "").toUpperCase();
+const clean = (s) => (s ?? "").replace(/^[^\p{L}\p{N}]+/u, "").trim();
+
+// The conversation on a pane, same rules as the agents list: drop a trailing
+// " | <space>", and skip a path, a bare number, or the program's own name.
+function talk(pane, spaceName) {
+  if (!pane) return null;
+  const noise = new Set([pane.program?.name, pane.program?.key, pane.app, pane.status, spaceName]
+    .map((s) => String(s ?? "").trim().toLowerCase()).filter(Boolean));
+  const usable = (s) => {
+    const v = clean(s);
+    if (!v || noise.has(v.toLowerCase())) return null;
+    if (/^[~/]|^[A-Za-z]:\\/.test(v) || /^\d+$/.test(v) || v.includes("@")) return null;
+    return v;
+  };
+  let raw = clean(pane.title);
+  const space = String(spaceName ?? "").trim().toLowerCase();
+  const pipe = raw.lastIndexOf(" | ");
+  if (pipe > 0 && raw.slice(pipe + 3).trim().toLowerCase() === space) raw = raw.slice(0, pipe).trim();
+  return usable(raw);
+}
 
 // Tab text a little brighter than the theme's own, so names read on chrome.
 const lift = (hex, k = 0.35) => {
@@ -67,12 +87,16 @@ export default class Tabs extends View {
       .text_size(12).text_color(t.dim).hover(s => s.bg(t.hover).text_color(t.accent))
       .on_mouse_down("left", stop).on_click(action).child(label);
 
-    // A tab chip: icon, its number, the name, and a close. An unnamed tab's name is
-    // its number, so the number would be said twice; the program's name says more.
+    // A tab chip: icon, its number, the name, and a close. A name someone gave
+    // stays. A bare number, an internal id, the program's own name, or codex-f /
+    // codex-z shows the conversation, then the program's name.
     const item = (c, i) => {
-      const program = panes().find(p => p.tab === c.id && p.program?.agent)?.program ?? panes().find(p => p.tab === c.id)?.program;
-      const auto = /^tb\d+$/.test(c.name) || c.name === String(c.index);
-      const name = auto ? program?.name ?? "" : c.name;
+      const lead = panes().find(p => p.tab === c.id && p.program?.agent) ?? panes().find(p => p.tab === c.id);
+      const program = lead?.program;
+      const same = (a, b) => String(a ?? "").trim().toLowerCase() === String(b ?? "").trim().toLowerCase();
+      const nick = same(c.name, "codex-f") || same(c.name, "codex-z");
+      const auto = /^tb\d+$/.test(c.name) || c.name === String(c.index) || same(c.name, program?.name) || nick;
+      const name = auto ? (talk(lead, space?.name) || program?.name || "") : c.name;
       const on = c.active;
       return h_flex().id(`tab-${c.id}`).relative().h_full().px(8).gap(5).items_center().flex_none().text_size(11)
         .when(on, el => el.bg(t.accent + "14").border(1).border_color(t.accent + "88").rounded(2).mx(2).my(2))

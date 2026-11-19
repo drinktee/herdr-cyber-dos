@@ -41,7 +41,12 @@ terminal's default text is not harsh.
 - **The spaces footer** counts agents by status: four dots and their numbers.
 - **Clicking** a tab selects it; double-click renames; right-click opens a menu.
   Dragging a tab reorders. Clicking a space or agent focuses it.
-- **The tab bar** scrolls with the wheel, moving between tabs.
+- **The tab bar** shows the position, then the conversation title when the stored
+  name is a bare number, an internal id, the program's own name, `codex-f`, or
+  `codex-z`. Any other name stays. The strip scrolls with the wheel, moving
+  between tabs.
+- **Go to** (`Cmd-P` when bound to this picker) lists each installed agent under
+  new tab, and starts one in the shown space.
 - **The spaces and agents lists** scroll too, but their scrollbars show only
   while you scroll, so a long list keeps the sidebar clean.
 - **Pressing `ctrl-shift-b`** collapses the sidebar to a 44px rail.
