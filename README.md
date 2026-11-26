@@ -33,17 +33,20 @@ terminal's default text is not harsh.
 | `idle` | A hollow ring |
 
 - **Space rows** take a 20% accent wash with a 2px accent bar on the left when active.
-- **Agent rows** take the same wash. The name is the conversation title (the
-  terminal title, without a trailing ` | <space>`, skipping a path, a bare
-  number or the program's name). Priority shows the space on the first line and
-  the title under it. Grouped by space uses a space header and a square elbow;
-  the row is the title, and the header has no count.
+- **Agent rows** take the same wash. The name is the Claude session name when
+  that process has one, otherwise the conversation title (the terminal title,
+  without a trailing ` | <space>`, skipping a path, a bare number or the
+  program's name). Priority shows the space on the first line and the title
+  under it. Grouped by space uses a space header and a square elbow; the row
+  is the title, and the header has no count.
 - **The spaces footer** counts agents by status: four dots and their numbers.
 - **Clicking** a tab selects it; double-click renames; right-click opens a menu.
   Dragging a tab reorders. Clicking a space or agent focuses it.
 - **The tab bar** shows the position, then the conversation title when the stored
   name is a bare number, an internal id, the program's own name, `codex-f`,
-  `codex-z`, or `claude-grok`. Any other name stays. The strip scrolls with the
+  `codex-z`, or `claude-grok`. A Claude tab then shows that process's session
+  name (the one in Claude's prompt bar); otherwise the window title. Any other
+  name stays. The strip scrolls with the
   wheel, moving between tabs.
 - **Go to** (`Cmd-P` when bound to this picker) lists each installed agent under
   new tab, and starts one in the shown space.

@@ -2,7 +2,7 @@
 
 import { View, div, svg, image } from "gpui-kit";
 import { h_flex } from "gpui-base";
-import { spaces, panes, run, openOverlay, theme, window, shared, layout } from "herdr";
+import { spaces, panes, run, openOverlay, theme, window, shared, layout, hc, exec, readTextFile, checking } from "herdr";
 
 const UPPER = (s) => String(s ?? "").toUpperCase();
 const clean = (s) => (s ?? "").replace(/^[^\p{L}\p{N}]+/u, "").trim();
@@ -24,6 +24,31 @@ function talk(pane, spaceName) {
   const pipe = raw.lastIndexOf(" | ");
   if (pipe > 0 && raw.slice(pipe + 3).trim().toLowerCase() === space) raw = raw.slice(0, pipe).trim();
   return usable(raw);
+}
+
+// Claude's own session name (~/.claude/sessions/<pid>.json "name"), not the
+// window title. A fork keeps the parent's topic as the title and sets its own name.
+async function loadSessions(machine) {
+  const on = machine ? { on: machine } : {};
+  const listed = await exec("sh", ["-c", 'for f in "$HOME"/.claude/sessions/*.json; do [ -f "$f" ] && printf "%s\\n" "$f"; done'], on);
+  const sessions = [];
+  for (const path of listed.stdout.split("\n")) {
+    if (!path) continue;
+    try {
+      const o = JSON.parse(await readTextFile(path, on));
+      if (o?.name && typeof o.startedAt === "number") sessions.push({ startedAt: o.startedAt, name: o.name });
+    } catch { /* skip a file that is not a session record */ }
+  }
+  return sessions;
+}
+
+function pickSession(created, sessions) {
+  let best = null, bestDt = 20000;
+  for (const s of sessions) {
+    const dt = Math.abs(s.startedAt - created);
+    if (dt < bestDt) { bestDt = dt; best = s; }
+  }
+  return best?.name ?? null;
 }
 
 // Tab text a little brighter than the theme's own, so names read on chrome.
@@ -48,9 +73,54 @@ function find(node, id) {
 }
 
 export default class Tabs extends View {
-  init() {
+  init(_props, cx) {
     this.pressed = null;
     this.panels = JSON.parse(localStorage.getItem("panels") ?? "{}");
+    this.sessionNames = {};
+    this.born = {};
+    this.arm(cx);
+  }
+
+  arm(cx) {
+    if (checking() || this.armed) return;
+    this.armed = true;
+    this.sessionNames = this.sessionNames || {};
+    this.born = this.born || {};
+    const pull = (cx) => cx.spawn(async (cx) => { await this.refreshSessions(cx); });
+    cx.timer.every(4000, pull);
+    pull(cx);
+  }
+
+  // Match each Claude pane to the session that started with its terminal.
+  async refreshSessions(cx) {
+    if (this.pulling) return;
+    const space = spaces().find((s) => s.active);
+    const leads = (space?.tabs ?? [])
+      .map((tab) => panes().find((p) => p.tab === tab.id && p.terminal && (p.app === "claude-code" || p.program?.key === "claude" || p.program?.key === "claude-grok")))
+      .filter(Boolean);
+    if (!leads.length) return;
+    this.pulling = true;
+    try {
+      const sessions = await loadSessions(space.machine);
+      let changed = false;
+      for (const lead of leads) {
+        const addr = lead.terminal;
+        if (this.born[addr] == null) {
+          try {
+            const got = await hc(["get", addr, "--json"]);
+            const created = JSON.parse(got.stdout || "{}").created_ms;
+            if (created) this.born[addr] = created;
+          } catch { /* next pass */ }
+        }
+        const name = this.born[addr] ? pickSession(this.born[addr], sessions) : null;
+        if (name && this.sessionNames[addr] !== name) {
+          this.sessionNames[addr] = name;
+          changed = true;
+        }
+      }
+      if (changed) cx.notify();
+    } catch { /* leave the window title in place */ }
+    finally { this.pulling = false; }
   }
 
   syncPanel(space, panel, body, enabled) {
@@ -78,7 +148,8 @@ export default class Tabs extends View {
     localStorage.setItem("panels", JSON.stringify(this.panels));
   }
 
-  render() {
+  render(cx) {
+    this.arm(cx);
     const t = theme();
     const space = spaces().find(p => p.active);
     const shown = space?.tabs ?? [];
@@ -89,14 +160,17 @@ export default class Tabs extends View {
 
     // A tab chip: icon, its number, the name, and a close. A name someone gave
     // stays. A bare number, an internal id, the program's own name, or a wrapper
-    // name (codex-f, codex-z, claude-grok) shows the conversation, then the program's name.
+    // name (codex-f, codex-z, claude-grok) shows the Claude session name, then
+    // the window title, then the program's name.
     const item = (c, i) => {
       const lead = panes().find(p => p.tab === c.id && p.program?.agent) ?? panes().find(p => p.tab === c.id);
       const program = lead?.program;
       const same = (a, b) => String(a ?? "").trim().toLowerCase() === String(b ?? "").trim().toLowerCase();
       const nick = same(c.name, "codex-f") || same(c.name, "codex-z") || same(c.name, "claude-grok");
       const auto = /^tb\d+$/.test(c.name) || c.name === String(c.index) || same(c.name, program?.name) || nick;
-      const name = auto ? (talk(lead, space?.name) || program?.name || "") : c.name;
+      const session = (lead?.app === "claude-code" || lead?.program?.key === "claude" || lead?.program?.key === "claude-grok")
+        ? this.sessionNames?.[lead.terminal] : null;
+      const name = auto ? (session || talk(lead, space?.name) || program?.name || "") : c.name;
       const on = c.active;
       return h_flex().id(`tab-${c.id}`).relative().h_full().px(8).gap(5).items_center().flex_none().text_size(11)
         .when(on, el => el.bg(t.accent + "14").border(1).border_color(t.accent + "88").rounded(2).mx(2).my(2))

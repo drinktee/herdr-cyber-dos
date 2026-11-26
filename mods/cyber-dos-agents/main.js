@@ -3,7 +3,7 @@
 
 import { View, div, image, svg } from "gpui-kit";
 import { v_flex, h_flex } from "gpui-base";
-import { agents, terminals, panes, focused, spaces, run, theme, shared, setShared, setAgentOrder, openOverlay, closeOverlay, props } from "herdr";
+import { agents, terminals, panes, focused, spaces, run, theme, shared, setShared, setAgentOrder, openOverlay, closeOverlay, props, hc, exec, readTextFile, checking } from "herdr";
 
 // Sidebar text a little brighter than the theme's own, so names read on chrome.
 const lift = (hex, k = 0.35) => {
@@ -52,6 +52,33 @@ function conversation(a) {
   }
   return usable(raw) || usable(a.tab_name);
 }
+
+async function loadSessions(machine) {
+  const on = machine ? { on: machine } : {};
+  const listed = await exec("sh", ["-c", 'for f in "$HOME"/.claude/sessions/*.json; do [ -f "$f" ] && printf "%s\\n" "$f"; done'], on);
+  const sessions = [];
+  for (const path of listed.stdout.split("\n")) {
+    if (!path) continue;
+    try {
+      const o = JSON.parse(await readTextFile(path, on));
+      if (o?.name && typeof o.startedAt === "number") sessions.push({ startedAt: o.startedAt, name: o.name });
+    } catch { /* skip a file that is not a session record */ }
+  }
+  return sessions;
+}
+
+function pickSession(created, sessions) {
+  let best = null, bestDt = 20000;
+  for (const s of sessions) {
+    const dt = Math.abs(s.startedAt - created);
+    if (dt < bestDt) { bestDt = dt; best = s; }
+  }
+  return best?.name ?? null;
+}
+
+function isClaude(a) {
+  return a?.app === "claude-code" || a?.program?.key === "claude" || a?.program?.key === "claude-grok";
+}
 const RANK = { blocked: 4, done: 3, working: 2, idle: 1 };
 const SPIN = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
 const kidStatus = (k, listed) => {
@@ -85,7 +112,56 @@ export default class Agents extends View {
     this.folded = new Set();
     this.changed = JSON.parse(localStorage.getItem("changed") ?? "{}");
     this.pins = JSON.parse(localStorage.getItem("pins") ?? "[]");
+    this.sessionNames = {};
+    this.born = {};
     cx.timer.every(30000, (cx) => cx.notify());
+    this.arm(cx);
+  }
+
+  arm(cx) {
+    if (checking() || this.armed || props()?.sortMenu) return;
+    this.armed = true;
+    this.sessionNames = this.sessionNames || {};
+    this.born = this.born || {};
+    const pull = (cx) => cx.spawn(async (cx) => { await this.refreshSessions(cx); });
+    cx.timer.every(4000, pull);
+    pull(cx);
+  }
+
+  // Claude session name for every machine, matched by when the terminal started.
+  async refreshSessions(cx) {
+    if (this.pulling || props()?.sortMenu) return;
+    const leads = agents().filter(isClaude);
+    if (!leads.length) return;
+    this.pulling = true;
+    try {
+      const byMachine = new Map();
+      for (const a of leads) {
+        const machine = a.address.includes("/") ? a.address.split("/")[0] : "";
+        if (!byMachine.has(machine)) byMachine.set(machine, []);
+        byMachine.get(machine).push(a);
+      }
+      let changed = false;
+      for (const [machine, group] of byMachine) {
+        const sessions = await loadSessions(machine);
+        for (const a of group) {
+          if (this.born[a.address] == null) {
+            try {
+              const got = await hc(["get", a.address, "--json"]);
+              const created = JSON.parse(got.stdout || "{}").created_ms;
+              if (created) this.born[a.address] = created;
+            } catch { /* next pass */ }
+          }
+          const name = this.born[a.address] ? pickSession(this.born[a.address], sessions) : null;
+          if (name && this.sessionNames[a.address] !== name) {
+            this.sessionNames[a.address] = name;
+            changed = true;
+          }
+        }
+      }
+      if (changed) cx.notify();
+    } catch { /* keep the window title */ }
+    finally { this.pulling = false; }
   }
 
   track(list, now) {
@@ -195,6 +271,7 @@ export default class Agents extends View {
   }
 
   render(cx) {
+    if (!props()?.sortMenu) this.arm(cx);
     const t = theme();
     if (props()?.sortMenu) return this.sortMenu(t);
     const collapsed = shared("sidebar.collapsed") === true;
@@ -278,7 +355,7 @@ export default class Agents extends View {
         .child(svg(`mods/cyber-dos-workspace-chrome/${isPinned ? "pin-off" : "pin"}.svg`).size(11));
       const full = byPriority || isPinned;
       const name = full ? a.space_name || label(a) : more ?? (/^\d+$/.test(label(a)) ? a.program?.name || label(a) : label(a));
-      const session = conversation(a);
+      const session = this.sessionNames?.[a.address] || conversation(a);
       // Grouped rows hang off the space header: one line, the conversation, with a tree elbow.
       const branched = Boolean(branch);
       const primary = branched ? (session || more || a.program?.name || label(a)) : (a.space_name || name);
