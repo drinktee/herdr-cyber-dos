@@ -43,7 +43,7 @@ One Herdr window, square everywhere, in a deep teal palette.
 - Tabs: click selects, double-click renames, right-click opens the menu, drag
   reorders, wheel scrolls the strip. The chip shows the position, then the
   conversation title when the stored name is a bare number, an internal id, the
-  program's own name, `codex-f`, or `codex-z`. Any other name stays. The title
+  program's own name, `codex-f`, `codex-z`, or `claude-grok`. Any other name stays. The title
   is the terminal title, dropping a trailing ` | <space>`, and skipping paths,
   bare numbers and the program's name; otherwise the program's name.
 - Go to lists installed agents on the shown space's machine under new tab, and

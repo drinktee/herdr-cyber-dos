@@ -88,13 +88,13 @@ export default class Tabs extends View {
       .on_mouse_down("left", stop).on_click(action).child(label);
 
     // A tab chip: icon, its number, the name, and a close. A name someone gave
-    // stays. A bare number, an internal id, the program's own name, or codex-f /
-    // codex-z shows the conversation, then the program's name.
+    // stays. A bare number, an internal id, the program's own name, or a wrapper
+    // name (codex-f, codex-z, claude-grok) shows the conversation, then the program's name.
     const item = (c, i) => {
       const lead = panes().find(p => p.tab === c.id && p.program?.agent) ?? panes().find(p => p.tab === c.id);
       const program = lead?.program;
       const same = (a, b) => String(a ?? "").trim().toLowerCase() === String(b ?? "").trim().toLowerCase();
-      const nick = same(c.name, "codex-f") || same(c.name, "codex-z");
+      const nick = same(c.name, "codex-f") || same(c.name, "codex-z") || same(c.name, "claude-grok");
       const auto = /^tb\d+$/.test(c.name) || c.name === String(c.index) || same(c.name, program?.name) || nick;
       const name = auto ? (talk(lead, space?.name) || program?.name || "") : c.name;
       const on = c.active;
