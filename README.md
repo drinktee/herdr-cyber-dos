@@ -44,7 +44,7 @@ terminal's default text is not harsh.
   Dragging a tab reorders. Clicking a space or agent focuses it.
 - **The tab bar** shows the position, then the conversation title when the stored
   name is a bare number, an internal id, the program's own name, `codex-f`,
-  `codex-z`, or `claude-grok`. A Claude tab then shows that process's session
+  `codex-z`, `claude-grok`, or `claude-flash`. A Claude tab then shows that process's session
   name (the one in Claude's prompt bar); otherwise the window title. Any other
   name stays. The strip scrolls with the
   wheel, moving between tabs.

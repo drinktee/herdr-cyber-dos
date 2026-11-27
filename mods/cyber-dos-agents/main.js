@@ -77,7 +77,7 @@ function pickSession(created, sessions) {
 }
 
 function isClaude(a) {
-  return a?.app === "claude-code" || a?.program?.key === "claude" || a?.program?.key === "claude-grok";
+  return a?.app === "claude-code" || a?.program?.key === "claude" || a?.program?.key === "claude-grok" || a?.program?.key === "claude-flash";
 }
 const RANK = { blocked: 4, done: 3, working: 2, idle: 1 };
 const SPIN = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];

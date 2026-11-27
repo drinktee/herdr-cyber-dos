@@ -96,7 +96,7 @@ export default class Tabs extends View {
     if (this.pulling) return;
     const space = spaces().find((s) => s.active);
     const leads = (space?.tabs ?? [])
-      .map((tab) => panes().find((p) => p.tab === tab.id && p.terminal && (p.app === "claude-code" || p.program?.key === "claude" || p.program?.key === "claude-grok")))
+      .map((tab) => panes().find((p) => p.tab === tab.id && p.terminal && (p.app === "claude-code" || p.program?.key === "claude" || p.program?.key === "claude-grok" || p.program?.key === "claude-flash")))
       .filter(Boolean);
     if (!leads.length) return;
     this.pulling = true;
@@ -160,15 +160,15 @@ export default class Tabs extends View {
 
     // A tab chip: icon, its number, the name, and a close. A name someone gave
     // stays. A bare number, an internal id, the program's own name, or a wrapper
-    // name (codex-f, codex-z, claude-grok) shows the Claude session name, then
+    // name (codex-f, codex-z, claude-grok, claude-flash) shows the Claude session name, then
     // the window title, then the program's name.
     const item = (c, i) => {
       const lead = panes().find(p => p.tab === c.id && p.program?.agent) ?? panes().find(p => p.tab === c.id);
       const program = lead?.program;
       const same = (a, b) => String(a ?? "").trim().toLowerCase() === String(b ?? "").trim().toLowerCase();
-      const nick = same(c.name, "codex-f") || same(c.name, "codex-z") || same(c.name, "claude-grok");
+      const nick = same(c.name, "codex-f") || same(c.name, "codex-z") || same(c.name, "claude-grok") || same(c.name, "claude-flash");
       const auto = /^tb\d+$/.test(c.name) || c.name === String(c.index) || same(c.name, program?.name) || nick;
-      const session = (lead?.app === "claude-code" || lead?.program?.key === "claude" || lead?.program?.key === "claude-grok")
+      const session = (lead?.app === "claude-code" || lead?.program?.key === "claude" || lead?.program?.key === "claude-grok" || lead?.program?.key === "claude-flash")
         ? this.sessionNames?.[lead.terminal] : null;
       const name = auto ? (session || talk(lead, space?.name) || program?.name || "") : c.name;
       const on = c.active;

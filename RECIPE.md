@@ -44,7 +44,7 @@ One Herdr window, square everywhere, in a deep teal palette.
 - Tabs: click selects, double-click renames, right-click opens the menu, drag
   reorders, wheel scrolls the strip. The chip shows the position, then the
   conversation title when the stored name is a bare number, an internal id, the
-  program's own name, `codex-f`, `codex-z`, or `claude-grok`. A Claude tab uses
+  program's own name, `codex-f`, `codex-z`, `claude-grok`, or `claude-flash`. A Claude tab uses
   that process's session name when it can read one, then the window title. Any
   other name stays. The title
   is the terminal title, dropping a trailing ` | <space>`, and skipping paths,
